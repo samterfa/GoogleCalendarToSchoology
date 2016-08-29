@@ -15,7 +15,7 @@ var requestDelay = 200; //in ms. 50 requests per 5 seconds is Schoology's api re
    This can easily be modified to sync to Districts, Schools, Users or Groups.
    NOTE: This only syncs future events. If changes are made to past events, they will not be synced.
 */
-function syncGoogleCalendarToSchoologySectionCalendar(){
+function syncGoogleCalendarToSchoologyCalendar(){
   
   //Choose schoologyCalendarType from district, school, user, section, or group as described here: https://developers.schoology.com/api-documentation/rest-api-v1/event
   
@@ -46,7 +46,7 @@ function syncGoogleCalendarToSchoologySectionCalendar(){
 }
 
 
-function UNsyncGoogleCalendarToSchoologySectionCalendar(){
+function UNsyncGoogleCalendarToSchoologyCalendar(){
   
   //Choose schoologyCalendarType from district, school, user, section, or group as described here: https://developers.schoology.com/api-documentation/rest-api-v1/event
   
