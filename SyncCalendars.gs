@@ -89,7 +89,23 @@ function postGoogleEventsToSchoologyCalendar(schoologyCalendarType, id, googleCa
       
       // ... it must be handled differently...
       var title = googleEvents[i].getTitle();
-      var description = googleEvents[i].getDescription() + '- Synced from Google Calendar ' + googleCalendarName;
+      
+      var description = '';
+      
+       if(googleEvents[i].getDescription()!=""){
+       
+        description = description + 'Description: ' + googleEvents[i].getDescription() + '<br><br>';
+        
+      }
+      
+      if(googleEvents[i].getLocation()!=""){
+       
+        description = description + 'Location: ' + googleEvents[i].getLocation() + '<br><br>';
+        
+      }
+      
+      description = description + '- Synced from Google Calendar ' + googleCalendarName;
+      
       var start = formatDate(googleEvents[i].getAllDayStartDate());
       
       var endDate = googleEvents[i].getAllDayEndDate();
@@ -106,7 +122,23 @@ function postGoogleEventsToSchoologyCalendar(schoologyCalendarType, id, googleCa
     if(!googleEvents[i].isAllDayEvent()){
       
       var title = googleEvents[i].getTitle();
-      var description = googleEvents[i].getDescription() + '- Synced from Google Calendar ' + googleCalendarName;
+      
+      var description = '';
+      
+       if(googleEvents[i].getDescription()!=""){
+       
+        description = description + 'Description: ' + googleEvents[i].getDescription() + '<br><br>';
+        
+      }
+      
+      if(googleEvents[i].getLocation()!=""){
+       
+        description = description + 'Location: ' + googleEvents[i].getLocation() + '<br><br>';
+        
+      }
+      
+      description = description + '- Synced from Google Calendar ' + googleCalendarName;
+      
       var start = formatDate(googleEvents[i].getStartTime()) + " " + formatDateTime(googleEvents[i].getStartTime());
       var end = formatDate(googleEvents[i].getEndTime()) + " " + formatDateTime(googleEvents[i].getEndTime());
       var isAllDayEvent = false;
