@@ -1,6 +1,6 @@
-var consumerKey = '(your key here)'; // Can be found at http://schoology.yourDomainName.whatever/api
+var consumerKey = '(yourKeyHere)'; // Can be found at http://schoology.yourDomainName.whatever/api
 
-var consumerSecret = '(your secret here)'; // Can be found at http://schoology.yourDomainName.whatever/api
+var consumerSecret = '(yourSecretHere)'; // Can be found at http://schoology.yourDomainName.whatever/api
 
 var signatureMethod = 'PLAINTEXT'; // This is the signature generation method used for Oauth. For https connection, plaintext works fine. See https://developers.schoology.com/api-documentation/authentication for details. 
 
@@ -19,7 +19,7 @@ function syncGoogleCalendarToSchoologyCalendar(){
   
   //Choose schoologyCalendarType from district, school, user, section, or group as described here: https://developers.schoology.com/api-documentation/rest-api-v1/event
   
-  var schoologyCalendarType = '(district/school/user/section/ORgroup)';
+  var schoologyCalendarType = '(districtORschoolORuserORsectionORgroup)';
   
 /* This is easily found in the URL for the specific calendar you want to edit. 
   A District user can select the District in triangle menu in the upper right of the Schoology page. The url will look like http://schoology.someSchoolsDomain.net/school/ID.
@@ -29,10 +29,10 @@ function syncGoogleCalendarToSchoologyCalendar(){
   Same for groups...
 */
   
-  var id = '(yourIdHere))';
+  var id = '(yourIdHere)';
   
   // Name as it appears in your Google calendars list.
-  var googleCalendarName = '(yourCalendarNameHere))';
+  var googleCalendarName = '(yourCalendarNameHere)';
   
   // How many FUTURE days of events to sync to Schoology. Start conservatively to test.
   var daysToSync = 10;
@@ -59,7 +59,7 @@ function UNsyncGoogleCalendarToSchoologyCalendar(){
   Clicking on a class section gives you the id in the Url also: http://schoology.minnehahaacademy.net/course/ID/...
   Same for groups...
   */
-  var id = 'yourIdHere';
+  var id = '(yourIdHere)';
   
   // Name as it appears in your Google calendars list.
   var googleCalendarName = '(yourCalendarNameHere)';
