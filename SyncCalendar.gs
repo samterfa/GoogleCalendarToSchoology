@@ -12,14 +12,14 @@ var requestDelay = 200; //in ms. 50 requests per 5 seconds is Schoology's api re
 
 
 /* This is the main function you can replicate and set triggers for in order to sync Google calendars to a Schoology section calendar.
-   This can easily be modified to sync to Districts, Schools, Users or Groups. (Though I have never done this so try it with a small calendar first!)
+   This can easily be modified to sync to Districts, Schools, Users or Groups.
    NOTE: This only syncs future events. If changes are made to past events, they will not be synced.
 */
 function syncGoogleCalendarToSchoologySectionCalendar(){
   
   //Choose schoologyCalendarType from district, school, user, section, or group as described here: https://developers.schoology.com/api-documentation/rest-api-v1/event
   
-  var schoologyCalendarType = 'section';
+  var schoologyCalendarType = '(district/school/user/section/ORgroup)';
   
 /* This is easily found in the URL for the specific calendar you want to edit. 
   A District user can select the District in triangle menu in the upper right of the Schoology page. The url will look like http://schoology.someSchoolsDomain.net/school/ID.
@@ -28,19 +28,20 @@ function syncGoogleCalendarToSchoologySectionCalendar(){
   Clicking on a class section gives you the id in the Url also: http://schoology.minnehahaacademy.net/course/ID/...
   Same for groups...
 */
-  var id = '(your district/school/section/user/group calendar id here)';
+  
+  var id = '(yourIdHere))';
   
   // Name as it appears in your Google calendars list.
-  var googleCalendarName = '(your calendar name here)';
+  var googleCalendarName = '(yourCalendarNameHere))';
   
-  // How many FUTURE days of events to sync to Schoology.
-  var daysToSync = 30;
+  // How many FUTURE days of events to sync to Schoology. Start conservatively to test.
+  var daysToSync = 10;
   
   // First delete all synced events from googleCalendarName...
-  deleteSyncedGoogleEventsFromSection(schoologyCalendarType, id, googleCalendarName)
+  deleteSyncedGoogleEventsFromSchoologyCalendar(schoologyCalendarType, id, googleCalendarName)
   
   //... then post "refreshed" googleCalendarName events.
-  postGoogleEventsToSchoologySection(schoologyCalendarType, id, googleCalendarName, daysToSync);
+  postGoogleEventsToSchoologyCalendar(schoologyCalendarType, id, googleCalendarName, daysToSync);
   
 }
 
@@ -49,28 +50,29 @@ function UNsyncGoogleCalendarToSchoologySectionCalendar(){
   
   //Choose schoologyCalendarType from district, school, user, section, or group as described here: https://developers.schoology.com/api-documentation/rest-api-v1/event
   
-  var schoologyCalendarType = 'section';
+  var schoologyCalendarType = '(district/school/user/section/ORgroup)';
   
-/* This is easily found in the URL for the specific calendar you want to edit. 
+  /* This is easily found in the URL for the specific calendar you want to edit. 
   A District user can select the District in triangle menu in the upper right of the Schoology page. The url will look like http://schoology.someSchoolsDomain.net/school/ID.
   A specific school user can select the specific school in that same menu. The url will also look like http://schoology.someSchoolsDomain.net/school/ID.
   Any user can click Home, then Calendar on the left, and find their id in the Url: http://schoology.someSchoolsDomain.net/calendar/ID/...
   Clicking on a class section gives you the id in the Url also: http://schoology.minnehahaacademy.net/course/ID/...
   Same for groups...
-*/
-  var id = '(your district/school/section/user/group calendar id here)';
+  */
+  var id = 'yourIdHere';
   
   // Name as it appears in your Google calendars list.
-  var googleCalendarName = '(your calendar name here)';
+  var googleCalendarName = '(yourCalendarNameHere)';
   
-  // Delete all synced events from googleCalendarName...
-  deleteSyncedGoogleEventsFromSection(schoologyCalendarType, id, googleCalendarName);
+  // First delete all synced events from googleCalendarName...
+  deleteSyncedGoogleEventsFromSchoologyCalendar(schoologyCalendarType, id, googleCalendarName);
 
 }
 
 
+
 // This function grabs events from googleCalendarName and sends them to Schoology class id's calendar. Triggers can be set up to do this automatically.
-function postGoogleEventsToSchoologySection(schoologyCalendarType, id, googleCalendarName, daysToSync){
+function postGoogleEventsToSchoologyCalendar(schoologyCalendarType, id, googleCalendarName, daysToSync){
   
   // Get a period of events from googleCalendarName
   var now = new Date();
@@ -120,31 +122,55 @@ function postGoogleEventsToSchoologySection(schoologyCalendarType, id, googleCal
 
 
 // This function grabs all Schoology section events which were synced from googleCalendarName and deletes them.
-function deleteSyncedGoogleEventsFromSection(schoologyCalendarType, id, googleCalendarName){
+function deleteSyncedGoogleEventsFromSchoologyCalendar(schoologyCalendarType, id, googleCalendarName){
   
-  var d = new Date();
-  var timestamp = d.getTime()/1000; // Get current time in seconds.
-  var nonce = timestamp; // Schoology requires a unique nonce value for each timestamp. Could do something fancier.
-
-  var apiUrl = schoologyCalendarType + 's/' + id + '/events/';
-  
-  var url = baseUrl + apiUrl + '?oauth_consumer_key=' + consumerKey + '&oauth_signature_method=' + signatureMethod + '&oauth_timestamp=' + timestamp + '&oauth_nonce=' + nonce + '&oauth_version=' + authVersion + '&oauth_signature=' + consumerSecret + '%26'; 
-   
-  Utilities.sleep(requestDelay); // Separate requests so that Schoology stays happy.
-  var response = UrlFetchApp.fetch(url); // Make the api call and store the response from the server.
-  var data = JSON.parse(response).event; // Grab the info we're really after.
-  
+  var startVal = 0;
+  var limit = 200; // This seems to be Schoology's upper limit of values that can be returned.
+  var total = 1; // This will eventually contain total number of Schoology events to check through.
   var syncedEvents = [];
   
-  for(var i = 0; i < data.length; i++){
+  while(startVal <= total){
     
-    if(data[i].description.indexOf('- Synced from Google Calendar ' + googleCalendarName) > -1){
-      
-      deleteSchoologyEvent(data[i].id, schoologyCalendarType, id, googleCalendarName);
-      
+    var d = new Date();
+    var timestamp = d.getTime()/1000; // Get current time in seconds.
+    var nonce = timestamp; // Schoology requires a unique nonce value for each timestamp. Could do something fancier.
+    
+    var apiUrl = schoologyCalendarType + 's/' + id + '/events/';
+    
+    var url = baseUrl + apiUrl + '?start=' + startVal + '&limit=' + limit + '&oauth_consumer_key=' + consumerKey + '&oauth_signature_method=' + signatureMethod + '&oauth_timestamp=' + timestamp + '&oauth_nonce=' + nonce + '&oauth_version=' + authVersion + '&oauth_signature=' + consumerSecret + '%26'; 
+    
+    Utilities.sleep(requestDelay); // Separate requests so that Schoology stays happy.
+    var response = UrlFetchApp.fetch(url); // Make the api call and store the response from the server.
+    var data = JSON.parse(response).event; // Grab the info we're really after.
+    
+    if(startVal == 0){
+      // Gets total number of events to be checked through.
+      total = JSON.parse(response).total;
     }
-  } 
+    
+    for(var i = 0; i < data.length; i++){
+      
+      if(data[i].description.indexOf('- Synced from Google Calendar ' + googleCalendarName) > -1){
+        
+        syncedEvents.push([data[i].id, schoologyCalendarType, id, googleCalendarName]);
+        
+      }
+    }
+    
+    startVal = startVal + limit;
+
+  }
+  
+  for(var i = 0; i < syncedEvents.length; i++){
+   
+    deleteSchoologyEvent(syncedEvents[i][0],syncedEvents[i][1],syncedEvents[i][2],syncedEvents[i][3]);
+    
+  }
+  
 }
+
+
+
 
 
 function postGoogleEvent(title, description, start, end, isAllDayEvent, schoologyCalendarType, id){ 
