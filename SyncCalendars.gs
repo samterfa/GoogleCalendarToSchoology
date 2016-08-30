@@ -34,11 +34,26 @@ function syncGoogleCalendarToSchoologyCalendar(){
   // Name as it appears in your Google calendars list.
   var googleCalendarName = '(yourCalendarNameHere)';
   
-  // How many FUTURE days of events to sync to Schoology. Start conservatively to test.
-  var daysToSync = 10;
+ /*
+COMMENT OUT ONE OF THE FOLLOWING OPTIONS
+*/
+  
+  // OPTION 1: How many FUTURE days of events to sync to Schoology.
+    var daysToSync = 365;
+  
+  // OPTION 2: Calculate daysToSync based on a specific end date such as the end of the school year.
+  //var now = new Date();
+  //var startDate = (now.getMonth()+1) + '/' + now.getDate() + '/' + now.getYear();
+  //var daysToSync = daysBetween(startDate,"6/10/2017");
+  
+/*
+COMMENT OUT ONE OF THE PREVIOUS OPTIONS
+*/
+  
+  var deleteFutureOnly = true; // Only deletes future events since only future events sync.
   
   // First delete all synced events from googleCalendarName...
-  deleteSyncedGoogleEventsFromSchoologyCalendar(schoologyCalendarType, id, googleCalendarName)
+  deleteSyncedGoogleEventsFromSchoologyCalendar(schoologyCalendarType, id, googleCalendarName, deleteFutureOnly)
   
   //... then post "refreshed" googleCalendarName events.
   postGoogleEventsToSchoologyCalendar(schoologyCalendarType, id, googleCalendarName, daysToSync);
@@ -64,8 +79,11 @@ function UNsyncGoogleCalendarToSchoologyCalendar(){
   // Name as it appears in your Google calendars list.
   var googleCalendarName = '(yourCalendarNameHere)';
   
+  var deleteFutureOnly = false; // Gets rid of ALL synced events.
+  
   // First delete all synced events from googleCalendarName...
-  deleteSyncedGoogleEventsFromSchoologyCalendar(schoologyCalendarType, id, googleCalendarName);
+  deleteSyncedGoogleEventsFromSchoologyCalendar(schoologyCalendarType, id, googleCalendarName, deleteFutureOnly);
+
 
 }
 
@@ -154,7 +172,7 @@ function postGoogleEventsToSchoologyCalendar(schoologyCalendarType, id, googleCa
 
 
 // This function grabs all Schoology section events which were synced from googleCalendarName and deletes them.
-function deleteSyncedGoogleEventsFromSchoologyCalendar(schoologyCalendarType, id, googleCalendarName){
+function deleteSyncedGoogleEventsFromSchoologyCalendar(schoologyCalendarType, id, googleCalendarName, deleteFutureOnly){
   
   var startVal = 0;
   var limit = 200; // This seems to be Schoology's upper limit of values that can be returned.
@@ -180,12 +198,22 @@ function deleteSyncedGoogleEventsFromSchoologyCalendar(schoologyCalendarType, id
       total = JSON.parse(response).total;
     }
     
-    for(var i = 0; i < data.length; i++){
+     for(var i = 0; i < data.length; i++){
       
       if(data[i].description.indexOf('- Synced from Google Calendar ' + googleCalendarName) > -1){
         
-        syncedEvents.push([data[i].id, schoologyCalendarType, id, googleCalendarName]);
+        var startDate = (d.getMonth()+1) + '/' + d.getDate() + '/' + d.getYear();
         
+        
+        var endDate = data[i].start;
+        endDate = endDate.substring(5,7) + '/' + endDate.substring(8,10) + '/' + endDate.substring(0,4);
+        
+        // If the start date of the event is after today or deleteFutureOnly is false...
+        if(daysBetween(startDate, endDate) >= 0 || !deleteFutureOnly){
+        
+        syncedEvents.push([data[i].id, schoologyCalendarType, id, googleCalendarName]);
+          
+        }
       }
     }
     
@@ -318,4 +346,16 @@ function formatDateTime(dateTime){
   var dateTime = hoursString  + ":" + minutesString + ":" + secondsString;
   
   return(dateTime);
+}
+
+// These two functions calculate the number of days you'll need to sync the calendar for if you provide an end date for syncing.
+function treatAsUTC(date) {
+    var result = new Date(date);
+    result.setMinutes(result.getMinutes() - result.getTimezoneOffset());
+    return result;
+}
+
+function daysBetween(startDate, endDate) {
+  var millisecondsPerDay = 24 * 60 * 60 * 1000;
+  return (treatAsUTC(endDate) - treatAsUTC(startDate)) / millisecondsPerDay;
 }
